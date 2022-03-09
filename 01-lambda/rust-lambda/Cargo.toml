@@ -5,7 +5,6 @@ edition = "2021"
 authors = ["Dawson Freitas Israel <dawsonfi@gmail.com"]
 
 [dependencies]
-lambda_runtime = "0.4.1"
-tokio = "1.14.0"
-serde = "1.0.130"
-serde_json = "1.0.59"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"
+lambda_runtime = "0.5.0"
