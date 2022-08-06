@@ -1,15 +1,32 @@
-use lambda_runtime::{handler_fn, Context, Error};
-use serde_json::{json, Value};
+use env_logger::{Builder, Target};
+use lambda_http::{service_fn, Body, Error, IntoResponse, Request, Response};
+use log::{info, LevelFilter};
+use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let func = handler_fn(func);
-    lambda_runtime::run(func).await?;
+    Builder::from_default_env()
+        .target(Target::Stdout)
+        .filter_level(LevelFilter::Info)
+        .init();
+    lambda_http::run(service_fn(func)).await?;
     Ok(())
 }
 
-async fn func(event: Value, _: Context) -> Result<Value, Error> {
-    let first_name = event["firstName"].as_str().unwrap_or("world");
+async fn func(event: Request) -> Result<impl IntoResponse, Error> {
+    info!("Event(info): {:?}", event);
 
-    Ok(json!({ "message": format!("Hi, {}!", first_name) }))
+    let body: Value = serde_json::from_str(match event.body() {
+        Body::Text(ref text) => text.as_str(),
+        _ => "{}",
+    })
+    .unwrap();
+
+    Ok(Response::builder()
+        .status(200)
+        .body(format!(
+            "{{\"subject_name\": \"{}\"}}",
+            body["name"].as_str().unwrap()
+        ))
+        .unwrap())
 }
